@@ -1,121 +1,209 @@
 import 'package:flutter/material.dart';
+import 'theme/app_theme.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_dashboard_screen.dart';
+import 'screens/vehicle_list_detail_screen.dart';
+import 'screens/add_edit_vehicle_screen.dart';
+import 'screens/booking_calendar_screen.dart';
+import 'screens/scan_customer_screen.dart';
+import 'screens/handover_log_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const CarRentApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class CarRentApp extends StatelessWidget {
+  const CarRentApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'CarRent — Black Mamba Enterprise',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        scaffoldBackgroundColor: AppColors.bgSurface,
+        primaryColor: AppColors.primary,
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const LoginScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MainNavigationShell extends StatefulWidget {
+  final UserRole initialRole;
+  const MainNavigationShell({super.key, required this.initialRole});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainNavigationShell> createState() => _MainNavigationShellState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MainNavigationShellState extends State<MainNavigationShell> {
+  int _tabIndex = 0;
+  late UserRole _role;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  final List<Vehicle> _vehicles = [
+    Vehicle(
+      id: '1',
+      plateNumber: 'QAA 1111',
+      brand: 'Perodua',
+      model: 'Myvi 1.5 AV',
+      year: 2023,
+      color: 'Granite Grey',
+      dailyRate: 120,
+      currentMileage: 31420,
+      status: 'available',
+    ),
+    Vehicle(
+      id: '2',
+      plateNumber: 'QAA 2222',
+      brand: 'Honda',
+      model: 'City RS',
+      year: 2022,
+      color: 'Platinum White',
+      dailyRate: 180,
+      currentMileage: 48905,
+      status: 'rented',
+    ),
+    Vehicle(
+      id: '3',
+      plateNumber: 'QAA 3333',
+      brand: 'Toyota',
+      model: 'Vios 1.5G',
+      year: 2020,
+      color: 'Attitude Black',
+      dailyRate: 170,
+      currentMileage: 76310,
+      status: 'maintenance',
+    ),
+    Vehicle(
+      id: '4',
+      plateNumber: 'QAA 4444',
+      brand: 'Perodua',
+      model: 'Axia SE',
+      year: 2024,
+      color: 'Coral Blue',
+      dailyRate: 100,
+      currentMileage: 12080,
+      status: 'available',
+    ),
+  ];
+
+  final List<BookingItem> _bookings = [
+    BookingItem(
+      id: 'b1',
+      customerName: 'Ahmad Faiz bin Hassan',
+      vehiclePlate: 'QAA 1111',
+      vehicleName: 'Perodua Myvi',
+      pickupDate: DateTime(2026, 12, 10, 10, 0),
+      returnDate: DateTime(2026, 12, 13, 10, 0),
+      totalPrice: 360.00,
+      status: 'confirmed',
+      assignedRunner: 'Akmal',
+    ),
+    BookingItem(
+      id: 'b2',
+      customerName: 'Nurul Izzah binti Halim',
+      vehiclePlate: 'QAA 2222',
+      vehicleName: 'Honda City',
+      pickupDate: DateTime(2026, 12, 9, 14, 0),
+      returnDate: DateTime(2026, 12, 11, 16, 30),
+      totalPrice: 360.00,
+      status: 'active',
+      assignedRunner: 'Akmal',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _role = widget.initialRole;
+  }
+
+  Future<void> _openAddOrEditVehicle([Vehicle? existing]) async {
+    final result = await Navigator.push<Vehicle>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddEditVehicleScreen(existingVehicle: existing),
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        final idx = _vehicles.indexWhere((v) => v.id == result.id);
+        if (idx >= 0) {
+          _vehicles[idx] = result;
+        } else {
+          _vehicles.insert(0, result);
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final pages = [
+      HomeDashboardScreen(
+        role: _role,
+        vehicles: _vehicles,
+        bookings: _bookings,
+        onToggleRole: () => setState(() {
+          _role = _role == UserRole.owner ? UserRole.runner : UserRole.owner;
+        }),
+        onNavigateTab: (idx) => setState(() => _tabIndex = idx),
+        onOpenAddVehicle: () => _openAddOrEditVehicle(),
+      ),
+      VehicleListDetailScreen(
+        role: _role,
+        vehicles: _vehicles,
+        onAddVehicle: () => _openAddOrEditVehicle(),
+        onEditVehicle: (v) => _openAddOrEditVehicle(v),
+        onDeleteVehicle: (id) =>
+            setState(() => _vehicles.removeWhere((v) => v.id == id)),
+      ),
+      BookingCalendarScreen(
+        bookings: _bookings,
+        vehicles: _vehicles,
+        onAddBooking: (b) => setState(() => _bookings.insert(0, b)),
+      ),
+      const ScanCustomerScreen(),
+      const HandoverLogScreen(),
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      body: SafeArea(child: pages[_tabIndex]),
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: Colors.white,
+        indicatorColor: AppColors.navPill,
+        selectedIndex: _tabIndex,
+        onDestinationSelected: (idx) => setState(() => _tabIndex = idx),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.directions_car_outlined),
+            selectedIcon: Icon(Icons.directions_car),
+            label: 'Fleet',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Calendar',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.document_scanner_outlined),
+            selectedIcon: Icon(Icons.document_scanner),
+            label: 'Scan',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.fact_check_outlined),
+            selectedIcon: Icon(Icons.fact_check),
+            label: 'Handover',
+          ),
+        ],
       ),
     );
   }

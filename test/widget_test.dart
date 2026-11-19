@@ -1,30 +1,71 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:carrent_car_rental_smart_system/main.dart';
+import 'package:carrent_smart_system/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('CarRent Issue #5 UI & BR-05 Role Tests', () {
+    testWidgets('1. Renders Login screen with Owner and Runner role switcher',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(const CarRentApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(find.text('CarRent'), findsOneWidget);
+      expect(find.text('Fleet and bookings for Black Mamba Enterprise'),
+          findsOneWidget);
+      expect(find.text('Owner'), findsOneWidget);
+      expect(find.text('Runner'), findsOneWidget);
+      expect(find.text('Sign in'), findsOneWidget);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    testWidgets(
+        '2. Owner login shows monthly revenue and Add Vehicle button (BR-05)',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(const CarRentApp());
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      // Tap Sign in as default Owner
+      await tester.tap(find.text('Sign in'));
+      await tester.pumpAndSettle();
+
+      // Verify Owner-exclusive elements are visible
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(find.text('Monthly Revenue (Owner View)'), findsOneWidget);
+      expect(find.text('RM 24,850.00'), findsOneWidget);
+      expect(find.text('Add Vehicle'), findsOneWidget);
+    });
+
+    testWidgets(
+        '3. Runner login hides revenue and Add Vehicle controls (BR-05)',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(const CarRentApp());
+
+      // Switch role to Runner before signing in
+      await tester.tap(find.text('Runner'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Sign in'));
+      await tester.pumpAndSettle();
+
+      // Verify BR-05 restriction notice appears and Owner revenue is hidden
+      expect(find.text('Runner Operations'), findsOneWidget);
+      expect(find.text('Monthly Revenue (Owner View)'), findsNothing);
+      expect(find.text('Add Vehicle'), findsNothing);
+    });
+
+    testWidgets('4. Navigates between Home, Fleet, and Booking Calendar tabs',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(const CarRentApp());
+
+      await tester.tap(find.text('Sign in'));
+      await tester.pumpAndSettle();
+
+      // Navigate to Fleet tab
+      await tester.tap(find.text('Fleet'));
+      await tester.pumpAndSettle();
+      expect(find.text('QAA 1111'), findsOneWidget);
+
+      // Navigate to Calendar tab
+      await tester.tap(find.text('Calendar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bookings'), findsOneWidget);
+      expect(find.text('New booking'), findsOneWidget);
+    });
   });
 }
